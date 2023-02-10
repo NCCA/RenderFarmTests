@@ -70,16 +70,18 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
     package['cmdline'] = f'/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile={scene}   -remapPath="{project_root}={remap_dest}" -display=0 -frames=QB_FRAME_NUMBER -imgFile={image_file}'
 
     job['package'] = package
- 
-    job['env']={"HOME" :f"/render/{user}",  
+    
+    env={"HOME" :f"/render/{user}",  
                 "LD_LIBRARY_PATH" :"/opt/software/vray_builds/vray/lib/",
                 "VRAY_AUTH_CLIENT_FILE_PATH" : "/opt/software/",
                 "VRAY_OSL_PATH" : "/opt/software/vray_builds/vray/opensl",
                 "VRAY_PLUGINS" :"/opt/software/vray_builds/maya_vray/vrayplugins",
                 "VRAY_OSL_PATH_MAYA2020":"/opt/software/vray_builds/vray/opensl" }
     for en in extra_env :
-        job['env'][en[0]]=en[1]
+        env[en[0]]=en[1]
 
+    job['env']=env
+    
     
    
 
@@ -155,7 +157,7 @@ if __name__ == "__main__":
     #     sys.exit()
     
 
-    main(args.name,args.cpus,args.scene_file,args.start_frame,args.end_frame,args.by_frame,args.project_root,args.env,"../images/testImage.exr",args.debug)
+    main(args.name,args.cpus,args.scene_file,args.start_frame,args.end_frame,args.by_frame,args.project_root,args.env,args.image_dir,args.debug)
 
 
 
