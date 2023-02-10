@@ -8,6 +8,9 @@ def ProcessCommandLine():
         "--start_frame", "-s",  default=0, type=int, help="start frame for render sequence default 0",required=True,
     )
     parser.add_argument(
+        "--name", "-n",  default="MyProject", type=str, help="Name of project ",
+    )
+    parser.add_argument(
         "--end_frame", "-e",  default=1, type=int, help="end frame for render sequence default 1",required=True,
     )
 

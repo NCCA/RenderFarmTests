@@ -39,7 +39,7 @@ Returns :
     None
 """
 
-def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , end_frame : int, by_frame : int, project_root :str):
+def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , end_frame : int, by_frame : int, project_root :str, image_file : str, mode : str):
 
     home_dir=os.environ.get("HOME")
     user=os.environ.get("USER")
@@ -65,9 +65,9 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
     #scene=f"/render/{user}/{project_root}/{scene_file}"
     scene=scene_file
     print(f"submitting to {scene}")
-    remap_source = project_root
+    print(f"{project_root}")
     remap_dest = project_root.replace("home","render")
-    package['cmdline'] = f'/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile={scene}   -remapPath="{project_root}={remap_dest}" -display=0 -frames=QB_FRAME_NUMBER'
+    package['cmdline'] = f'/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile={scene}   -remapPath="{project_root}={remap_dest}" -display=0 -frames=QB_FRAME_NUMBER -imgFile={image_file}'
 
     job['package'] = package
  
@@ -99,9 +99,13 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
     # good form.
     listOfJobsToSubmit = []
     listOfJobsToSubmit.append(job)
-    listOfSubmittedJobs = qb.submit(listOfJobsToSubmit)
-    for job in listOfSubmittedJobs:
-        print(job['id'])
+    if mode == "debug" :
+        for e in listOfJobsToSubmit :
+            print(e)
+    else :
+        listOfSubmittedJobs = qb.submit(listOfJobsToSubmit)
+        for job in listOfSubmittedJobs:
+            print(job['id'])
 
 # Below runs the "main" function
 if __name__ == "__main__":
@@ -140,7 +144,7 @@ if __name__ == "__main__":
     #     print(f"Project path is not valid \n")
     #     sys.exit()
 
-    main(args.name,args.cpu,args.start_frame,args.end_frame,args.by_frame,args.project_root)
+    main(args.name,args.cpus,args.scene_file,args.start_frame,args.end_frame,args.by_frame,args.project_root,"../images/testImage.exr","submit")
 
 
 
