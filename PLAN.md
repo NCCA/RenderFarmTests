@@ -15,7 +15,7 @@ These tools use renderers with Houdini mainly using Mantra and moving to Solaris
 
 Maya uses V-Ray, Arnold and Renderman in that order. This means we need to support 2 tools and 5 core renderers each of which use different file formats and pipelines to generate the scenes. 
 
-Whilst is is possible to automate some of these processes in Maya at present this is not working as the versions of Maya in the lab and farm are out of synch, and the pipeline for this process will need to be developed and tested.
+Whilst is is possible to automate some of these processes in Maya at present this is not working as the versions of Maya in the lab and farm are out of synch, and the pipeline for this process will need to be developed and tested. PFX are updating in version 8.0 to the VFX Reference pipeline and Python 3.9 but this is too late for now.
 
 Ideally we would like a one button solution to allow the export of the scenes for render to the farm, submission of jobs for render and reporting of jobs completed. This is a complex process requiring the integration of many tools and parts. The old system semi-automated this process. This is further  complicated by the fact that this is relatively simple under Linux as we have control over the build and infrastructure but massively complex under windows due to the nature of the windows install (Apps Anywhere / Security)
 

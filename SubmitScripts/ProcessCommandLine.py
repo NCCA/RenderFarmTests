@@ -1,0 +1,31 @@
+import argparse
+
+
+def ProcessCommandLine():
+    parser = argparse.ArgumentParser(description="VRay Farm Submission Script")
+
+    parser.add_argument(
+        "--start_frame", "-s",  default=0, type=int, help="start frame for render sequence default 0",required=True,
+    )
+    parser.add_argument(
+        "--end_frame", "-e",  default=1, type=int, help="end frame for render sequence default 1",required=True,
+    )
+
+    parser.add_argument(
+        "--by_frame", "-b", default=1, type=int, help="frame step for render default 1"
+    )
+
+    parser.add_argument(
+        "--cpus", "-c",  default=2, type=int, help="number of cpus"
+    )
+
+    parser.add_argument("--scene_file", "-sc", help="scene file to render", required=True)
+    
+    parser.add_argument("--remap", "-", help="Path to remap in destination, will try to do this automagically by default")
+
+    parser.add_argument("-env","-en",action='append',nargs=2,metavar=('key','value'),help="Add extra environment variables in the form of KEY VALUE this will be sent to qube verbatim, you can specify multiples ")
+
+
+
+    args = parser.parse_args()
+    return args
