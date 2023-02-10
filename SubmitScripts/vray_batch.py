@@ -39,7 +39,7 @@ Returns :
     None
 """
 
-def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , end_frame : int, by_frame : int, project_root :str, image_file : str, mode : str):
+def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , end_frame : int, by_frame : int, project_root :str,extra_env , image_file : str, mode : str):
 
     home_dir=os.environ.get("HOME")
     user=os.environ.get("USER")
@@ -77,6 +77,10 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
                 "VRAY_OSL_PATH" : "/opt/software/vray_builds/vray/opensl",
                 "VRAY_PLUGINS" :"/opt/software/vray_builds/maya_vray/vrayplugins",
                 "VRAY_OSL_PATH_MAYA2020":"/opt/software/vray_builds/vray/opensl" }
+    for en in extra_env :
+        job['env'][en[0]]=en[1]
+
+    
    
 
     # Now we must create our agenda list.  This is an absolutely essential part of
@@ -99,9 +103,15 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
     # good form.
     listOfJobsToSubmit = []
     listOfJobsToSubmit.append(job)
-    if mode == "debug" :
-        for e in listOfJobsToSubmit :
-            print(e)
+    if mode  :
+        print(extra_env)
+        print("*"*80)
+        for key,value in job["env"].items() :
+            print(f"[{key}] [{value}]")
+        print("*"*80)
+        print(job["package"]["cmdline"])
+        print("*"*80);
+
     else :
         listOfSubmittedJobs = qb.submit(listOfJobsToSubmit)
         for job in listOfSubmittedJobs:
@@ -143,8 +153,9 @@ if __name__ == "__main__":
     # else :
     #     print(f"Project path is not valid \n")
     #     sys.exit()
+    
 
-    main(args.name,args.cpus,args.scene_file,args.start_frame,args.end_frame,args.by_frame,args.project_root,"../images/testImage.exr","submit")
+    main(args.name,args.cpus,args.scene_file,args.start_frame,args.end_frame,args.by_frame,args.project_root,args.env,"../images/testImage.exr",args.debug)
 
 
 

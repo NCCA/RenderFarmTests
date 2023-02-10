@@ -27,7 +27,11 @@ def ProcessCommandLine():
     
     parser.add_argument("--remap", "-", help="Path to remap in destination, will try to do this automagically by default")
 
-    parser.add_argument("-env","-en",action='append',nargs=2,metavar=('key','value'),help="Add extra environment variables in the form of KEY VALUE this will be sent to qube verbatim, you can specify multiples ")
+    parser.add_argument("--env","-en",action='append',nargs=2,metavar=('key','value'),help="Add extra environment variables in the form of KEY VALUE this will be sent to qube verbatim, you can specify multiples ")
+
+    parser.add_argument("--debug","-d",action='store_true',help="enable debug mode, this will print out the package but not submit")
+
+
 
 
 
