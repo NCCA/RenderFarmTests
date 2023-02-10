@@ -20,6 +20,7 @@ def ProcessCommandLine():
     )
 
     parser.add_argument("--scene_file", "-sc", help="scene file to render", required=True)
+    parser.add_argument("--project_root", "-p", help="base of the project", required=True)
     
     parser.add_argument("--remap", "-", help="Path to remap in destination, will try to do this automagically by default")
 

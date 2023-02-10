@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import os
+import pathlib
 import platform
 # The next few lines attempt to import the Qube API. If the path to the qb module
 # is not in $PATH or $PYTHONPATH, we will attempt to find it by looking in known
@@ -9,7 +10,6 @@ import sys
 
 from ProcessCommandLine import *
 
-"""
 try :
     import qb
 except ImportError :
@@ -26,25 +26,30 @@ except ImportError :
 
 
 import qb
-"""
+
 """This is the entry point to submit a job to the farm. All the parameters are passed from the command line parser.
 
 Parameters :
     project_name : str 
         the name of the project used in the submission
+    cpus : int 
+        the number of cpus for the job to use
 
 Returns :
     None
 """
 
-def main(project_name  :str ):
+def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , end_frame : int, by_frame : int, project_root :str):
+
+    home_dir=os.environ.get("HOME")
+    user=os.environ.get("USER")
 
     job = {}
     job['name'] = project_name
     # This time, we will request 4 instances (previously known as subjobs).
     # By requesting 4 instances, assuming there are 4 open slots on the farm,
     # up to 4 agenda items will be processed simultaneously. 
-    job['cpus'] = 4
+    job['cpus'] = cpus
 
     # In the last example, we used the prototype 'cmdline' which implied a single
     # command being run on the farm.  This time, we will use the 'cmdrange' prototype
@@ -57,11 +62,16 @@ def main(project_name  :str ):
     # This is the command that will be run for every agenda item.  QB_FRAME_NUMBER,
     # however, is unique to cmdrange.  The text QB_FRAME_NUMBER will be replaced with
     # the actual frame number at run time.
-    package['cmdline'] = '/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile=/render/jmacey/jmacey/FarmTest/scenes/SingleFileVrrayExport.vrscene   -display=0 -frames=QB_FRAME_NUMBER'
+    #scene=f"/render/{user}/{project_root}/{scene_file}"
+    scene=scene_file
+    print(f"submitting to {scene}")
+    remap_source = project_root
+    remap_dest = project_root.replace("home","render")
+    package['cmdline'] = f'/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile={scene}   -remapPath="{project_root}={remap_dest}" -display=0 -frames=QB_FRAME_NUMBER'
 
     job['package'] = package
  
-    job['env']={"HOME" :"/render/jmacey",  
+    job['env']={"HOME" :f"/render/{user}",  
                 "LD_LIBRARY_PATH" :"/opt/software/vray_builds/vray/lib/",
                 "VRAY_AUTH_CLIENT_FILE_PATH" : "/opt/software/",
                 "VRAY_OSL_PATH" : "/opt/software/vray_builds/vray/opensl",
@@ -76,7 +86,7 @@ def main(project_name  :str ):
     #  1,3,5 means frames 1,3, and 5
     #  1-5,7 means frames 1,2,3,4,5,7
     #  1-10x3 means frames 1,4,7,10
-    agendaRange = '0-120x10'  # will evaluate to 0,10,20,30,40,50,60
+    agendaRange = f'{start_frame}-{end_frame}x{by_frame}'  # will evaluate to 0,10,20,30,40,50,60
 
     # Using the given range, we will create an agenda list using qb.genframes
     agenda = qb.genframes(agendaRange)
@@ -121,8 +131,16 @@ if __name__ == "__main__":
         if not file_ok :    
             print(f"this doesn't look like a valid vray file")
             print("will attempt to use it but be warned")
-    #main()
+    # We are going to auto setup the scene file to be on the farm for ease.
+    # p=pathlib.Path(args.project_root)
+    # if p.exists() :    
+    #     project_root=p.parts[-1]
+    #     print(f"{project_root}")
+    # else :
+    #     print(f"Project path is not valid \n")
+    #     sys.exit()
+
+    main(args.name,args.cpu,args.start_frame,args.end_frame,args.by_frame,args.project_root)
 
 
 
-# need to check this is in the file submitted "Exported by V-Ray Plugins Exporter"
