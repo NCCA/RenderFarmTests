@@ -7,7 +7,7 @@ import platform
 # is not in $PATH or $PYTHONPATH, we will attempt to find it by looking in known
 # locations   
 import sys
-
+from typing import List
 from ProcessCommandLine import *
 
 try :
@@ -39,7 +39,7 @@ Returns :
     None
 """
 
-def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , end_frame : int, by_frame : int, project_root :str,extra_env , image_file : str, mode : str):
+def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , end_frame : int, by_frame : int, project_root :str,extra_env , image_file : str,remap : List[str] ,mode : str):
 
     home_dir=os.environ.get("HOME")
     user=os.environ.get("USER")
@@ -66,8 +66,12 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
     scene=scene_file
     print(f"submitting to {scene}")
     print(f"{project_root}")
-    remap_dest = project_root.replace("home","render")
-    package['cmdline'] = f'/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile={scene}   -remapPath="{project_root}={remap_dest}" -display=0 -frames=QB_FRAME_NUMBER -imgFile={image_file}'
+
+    remap_path=""
+    if len(remap) !=0  :
+        remap_path=f'-remapPath "{remap[0]}={remap[1]}"'
+
+    package['cmdline'] = f'/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile={scene} {remap_path} -display=0 -frames=QB_FRAME_NUMBER -imgFile={image_file}'
 
     job['package'] = package
     
@@ -77,8 +81,9 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
                 "VRAY_OSL_PATH" : "/opt/software/vray_builds/vray/opensl",
                 "VRAY_PLUGINS" :"/opt/software/vray_builds/maya_vray/vrayplugins",
                 "VRAY_OSL_PATH_MAYA2020":"/opt/software/vray_builds/vray/opensl" }
-    for en in extra_env :
-        env[en[0]]=en[1]
+    if extra_env != None :
+        for en in extra_env :
+            env[en[0]]=en[1]
 
     job['env']=env
     
@@ -157,7 +162,7 @@ if __name__ == "__main__":
     #     sys.exit()
     
 
-    main(args.name,args.cpus,args.scene_file,args.start_frame,args.end_frame,args.by_frame,args.project_root,args.env,args.image_dir,args.debug)
+    main(args.name,args.cpus,args.scene_file,args.start_frame,args.end_frame,args.by_frame,args.project_root,args.env,args.image_dir,args.remap,args.debug)
 
 
 
