@@ -5,7 +5,6 @@ import sys
 import hou
 from PySide2 import QtCore, QtWidgets
 
-
 try :
     import qb
 except ImportError :
@@ -13,7 +12,7 @@ except ImportError :
        # Here I assume the NCCA Lab location
        sys.path.insert(0,"/public/devel/2022/pfx/qube/api/python/")
     elif platform.system() == "Darwin" :
-        # On my mac here pr
+        # On my mac here 
         sys.path.insert(0,"/Applications/pfx/qube/api/python")
     else :
         # For now no Windows!
@@ -22,6 +21,7 @@ except ImportError :
 
 
 import qb
+
 
 class RenderFarmSubmitDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -44,10 +44,12 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         label=QtWidgets.QLabel("Project Name")
         self.gridLayout.addWidget(label,0,0,1,1)
         self.project_name = QtWidgets.QLineEdit(f"{self.user}_{name}", self)
+        self.project_name.setToolTip("This is the name of the project as it will appear on the Qube GUI")
         self.gridLayout.addWidget(self.project_name, 0, 1, 1, 5)
 
         # row 1 select output drive
-        self.select_output=QtWidgets.QPushButton("Output Driver")
+        self.select_output=QtWidgets.QPushButton("Select ROP")
+        self.select_output.setToolTip("Select the output ROP to render, these will be either in the /shop or /stage level")
         self.select_output.clicked.connect(self.select_output_driver)
         self.gridLayout.addWidget(self.select_output,1,0,1,1)
         self.output_driver = QtWidgets.QLineEdit(self)
@@ -58,6 +60,8 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         label=QtWidgets.QLabel("Start Frame")
         self.gridLayout.addWidget(label,2,0,1,1)
         self.start_frame=QtWidgets.QSpinBox()
+        self.start_frame.setToolTip("Start frame for rendering, set from ROP but can be changed here, this will override the ROP value on the farm")
+
         self.start_frame.setRange(self.min_frame,self.max_frame)
         self.start_frame.setValue(self.min_frame)
         self.gridLayout.addWidget(self.start_frame,2,1,1,1)
@@ -67,47 +71,52 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.end_frame=QtWidgets.QSpinBox()
         self.end_frame.setRange(self.min_frame,self.max_frame)
         self.end_frame.setValue(self.max_frame)
+        self.end_frame.setToolTip("End frame for rendering, set from ROP but can be changed here, this will override the ROP value on the farm")
+
         self.gridLayout.addWidget(self.end_frame,2,3,1,1)
 
         label=QtWidgets.QLabel("By Frame")
         self.gridLayout.addWidget(label,2,4,1,1)
         self.by_frame=QtWidgets.QSpinBox()
         self.by_frame.setValue(1)
+        self.by_frame.setToolTip("Frame Step for rendering, set from ROP but can be changed here, this will override the ROP value on the farm")
+
         self.gridLayout.addWidget(self.by_frame,2,5,1,1)
 
         # row 3
-        label=QtWidgets.QLabel("Farm Location")
-        self.gridLayout.addWidget(label,3,0,1,1)
+        self.location_button=QtWidgets.QPushButton("Farm Location")
+        self.location_button.setToolTip("Select the file to render, not this must be on the farm mount")
+        self.gridLayout.addWidget(self.location_button,3,0,1,1)
+        self.location_button.clicked.connect(self.set_farm_location)
         base_path=hou.hipFile.path().split("/")[-2]
         location=f"/render/{self.user}/{base_path}/{hou.hipFile.basename()}"
         self.farm_location = QtWidgets.QLineEdit(location, self)
-
+        self.farm_location.setToolTip("""This is the full path to the hip file on the farm, you can enter this manually or press the button to select.
+        If the farm is mounted on /render you can navigate to here and select the file. If not you must specify the full path and name manually. 
+        If this is not correct the renders will fail""")
         self.gridLayout.addWidget(self.farm_location, 3, 1, 1, 5)
    
 
-
-        # row 5
+        # row 4
         # cancel button
 
         self.Cancel = QtWidgets.QPushButton("Cancel", self)
+        self.Cancel.setToolTip("Close the submit dialog")
         self.Cancel.clicked.connect(self.close)
-        self.gridLayout.addWidget(self.Cancel, 5, 0, 1, 1)
+        self.gridLayout.addWidget(self.Cancel, 4, 0, 1, 1)
 
         # Screen Shot button
 
         self.submit = QtWidgets.QPushButton("Submit", self)
         self.submit.pressed.connect(self.submit_job)
         self.submit.setEnabled(False)
-        self.gridLayout.addWidget(self.submit, 5, 5, 1, 1)
+        self.submit.setToolTip("Submit job to the farm, you must select a ROP before this will activate")
+        self.gridLayout.addWidget(self.submit, 4, 5, 1, 1)
 
 
     def submit_job(self) :
         job = {}
-        job['name'] = self.project_name
-        # This time, we will request 4 instances (previously known as subjobs).
-        # By requesting 4 instances, assuming there are 4 open slots on the farm,
-        # up to 4 agenda items will be processed simultaneously. 
-        job['cpus'] = 12
+        job['name'] = self.project_name.text()
         
         # In the last example, we used the prototype 'cmdline' which implied a single
         # command being run on the farm.  This time, we will use the 'cmdrange' prototype
@@ -136,7 +145,8 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
     
         # Now that we have a properly formatted agenda, assign it to the job
         job['agenda'] = agenda
-            
+        
+        
         # As before, we create a list of 1 job, then submit the list.  Again, we
         # could submit just the single job w/o the list, but submitting a list is
         # good form.
@@ -146,12 +156,24 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         for job in listOfSubmittedJobs:
             print(job['id'])
 
-
         self.done(0)
     
-    def closeEvent(self,event) :
-    
+    def closeEvent(self,event) :    
         super(RenderFarmSubmitDialog, self).closeEvent(event)
+
+    def set_farm_location(self) :
+        file_and_path=hou.ui.selectFile(None,"Choose file on Farm",False,hou.fileType.Hip,"","",False,False,hou.fileChooserMode.Write)
+        if file_and_path == "" :
+                return
+        if "$HOME" in file_and_path :
+                file_and_path=file_and_path.replace("$HOME",str(hou.getenv("HOME"))) 
+        elif "$HIP" in file_and_path :
+                file_and_path=file_and_path.replace("$HIP",str(hou.getenv("HIP"))) 
+        elif "$JOB" in file_and_path :
+                file_and_path=file_and_path.replace("$JOB",str(hou.getenv("JOB"))) 
+        self.farm_location.setText(file_and_path)
+
+
 
     def select_output_driver(self) :
         output=hou.ui.selectNode(node_type_filter=hou.nodeTypeFilter.Rop)
@@ -172,14 +194,3 @@ if os.environ.get("QB_SUPERVISOR") is None :
 dialog = RenderFarmSubmitDialog()
 dialog.setParent(hou.qt.mainWindow(), QtCore.Qt.Window)
 dialog.show()
-
-
-
-
-
-
-
-    
-    
-   
-    
