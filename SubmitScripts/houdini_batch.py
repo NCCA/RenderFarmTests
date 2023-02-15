@@ -70,9 +70,8 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
 
     package['shell']="/bin/bash"
     pre_render="cd /opt/software/hfs19.5.303/; source houdini_setup_bash; "
-    render_command="hython $HB/hrender.py -e -f 1 20 -R -d mantra1 /render/jmacey/WOBBLY_SPHERE/H17_wobbly_sphere_complete.hipnc "
+    render_command=f"hython $HB/hrender.py -e -F QB_FRAME_NUMBER -R -d /stage/usdrender_rop1 {scene} "
     package['cmdline']=f" {pre_render} {render_command}"
-    #package['cmdline'] = f'/opt/software/vray_builds/maya_vray/bin/vray.bin -sceneFile={scene} {remap_path} -display=0 -frames=QB_FRAME_NUMBER -imgFile={image_file}'
 
 
     job['package'] = package
