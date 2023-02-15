@@ -5,7 +5,7 @@ import sys
 import hou
 from PySide2 import QtCore, QtWidgets
 
-"""
+
 try :
     import qb
 except ImportError :
@@ -22,7 +22,6 @@ except ImportError :
 
 
 import qb
-"""
 
 class RenderFarmSubmitDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -103,8 +102,53 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
 
     def submit_job(self) :
-        pass
+        job = {}
+        job['name'] = self.project_name
+        # This time, we will request 4 instances (previously known as subjobs).
+        # By requesting 4 instances, assuming there are 4 open slots on the farm,
+        # up to 4 agenda items will be processed simultaneously. 
+        job['cpus'] = 12
+        
+        # In the last example, we used the prototype 'cmdline' which implied a single
+        # command being run on the farm.  This time, we will use the 'cmdrange' prototype
+        # which tells Qube that we are running a command per agenda item.
+        job['prototype'] = 'cmdrange'
+ 
+        package = {}
+        package['shell']="/bin/bash"
+        pre_render="cd /opt/software/hfs19.5.303/; source houdini_setup_bash; "
+        render_command=f"hython $HB/hrender.py -e -F QB_FRAME_NUMBER -R -d {self.output_driver.text()} {self.farm_location.text()} "
+        package['cmdline']=f" {pre_render} {render_command}"
+        
+        
+        job['package'] = package
+        
+        env={"HOME" :f"/render/{self.user}",  
+                    "SESI_LMHOST" : "hamworthy.bournemouth.ac.uk",
+                    "PIXAR_LICENSE_FILE" : "9010@talavera.bournemouth.ac.uk",            
+                    }
+        job['env']=env
 
+        agendaRange = f'{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}'  # will evaluate to 0,10,20,30,40,50,60
+
+        # Using the given range, we will create an agenda list using qb.genframes
+        agenda = qb.genframes(agendaRange)
+    
+        # Now that we have a properly formatted agenda, assign it to the job
+        job['agenda'] = agenda
+            
+        # As before, we create a list of 1 job, then submit the list.  Again, we
+        # could submit just the single job w/o the list, but submitting a list is
+        # good form.
+        listOfJobsToSubmit = []
+        listOfJobsToSubmit.append(job)
+        listOfSubmittedJobs = qb.submit(listOfJobsToSubmit)
+        for job in listOfSubmittedJobs:
+            print(job['id'])
+
+
+        self.done(0)
+    
     def closeEvent(self,event) :
     
         super(RenderFarmSubmitDialog, self).closeEvent(event)
@@ -121,8 +165,21 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
                 self.end_frame.setValue(int(frame_values[1]))
                 self.by_frame.setValue(int(frame_values[2]))
             
-            
+
+if os.environ.get("QB_SUPERVISOR") is None :
+    os.environ["QB_SUPERVISOR"]="tete.bournemouth.ac.uk"
+    os.environ["QB_DOMAIN"]="ncca"
 dialog = RenderFarmSubmitDialog()
 dialog.setParent(hou.qt.mainWindow(), QtCore.Qt.Window)
 dialog.show()
 
+
+
+
+
+
+
+    
+    
+   
+    
