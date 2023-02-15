@@ -13,7 +13,7 @@ except ImportError :
        # Here I assume the NCCA Lab location
        sys.path.insert(0,"/public/devel/2022/pfx/qube/api/python/")
     elif platform.system() == "Darwin" :
-        # On my mac here 
+        # On my mac here pr
         sys.path.insert(0,"/Applications/pfx/qube/api/python")
     else :
         # For now no Windows!
