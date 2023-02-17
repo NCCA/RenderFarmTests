@@ -1,26 +1,12 @@
 import os
 import platform
 import sys
+import subprocess
+import tempfile
 
 import hou
 from PySide2 import QtCore, QtWidgets
 
-try :
-    import qb
-except ImportError :
-    if platform.system() == "Linux" :
-       # Here I assume the NCCA Lab location
-       sys.path.insert(0,"/public/devel/2022/pfx/qube/api/python/")
-    elif platform.system() == "Darwin" :
-        # On my mac here 
-        sys.path.insert(0,"/Applications/pfx/qube/api/python")
-    else :
-        # For now no Windows!
-        print("can't find Qube Python API")
-        sys.exit()
-
-
-import qb
 
 
 class RenderFarmSubmitDialog(QtWidgets.QDialog):
@@ -115,50 +101,60 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
 
     def submit_job(self) :
-        job = {}
-        job['name'] = self.project_name.text()
-        
-        # In the last example, we used the prototype 'cmdline' which implied a single
-        # command being run on the farm.  This time, we will use the 'cmdrange' prototype
-        # which tells Qube that we are running a command per agenda item.
-        job['prototype'] = 'cmdrange'
- 
-        package = {}
-        package['shell']="/bin/bash"
-        pre_render="cd /opt/software/hfs19.5.303/; source houdini_setup_bash; "
-        render_command=f"hython $HB/hrender.py -e -F QB_FRAME_NUMBER -R -d {self.output_driver.text()} {self.farm_location.text()} "
-        package['cmdline']=f" {pre_render} {render_command}"
-        
-        
-        job['package'] = package
-        
-        env={"HOME" :f"/render/{self.user}",  
-                    "SESI_LMHOST" : "hamworthy.bournemouth.ac.uk",
-                    "PIXAR_LICENSE_FILE" : "9010@talavera.bournemouth.ac.uk",            
-                    }
-        job['env']=env
+        range=f"{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}"
+        payload=f"""
+import os
+import sys
+sys.path.insert(0,"/public/devel/2022/pfx/qube/api/python/")
 
-        agendaRange = f'{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}'  # will evaluate to 0,10,20,30,40,50,60
+import qb
+if os.environ.get("QB_SUPERVISOR") is None :
+    os.environ["QB_SUPERVISOR"]="tete.bournemouth.ac.uk"
+    os.environ["QB_DOMAIN"]="ncca"
 
-        # Using the given range, we will create an agenda list using qb.genframes
-        agenda = qb.genframes(agendaRange)
-    
-        # Now that we have a properly formatted agenda, assign it to the job
-        job['agenda'] = agenda
-        
-        
-        # As before, we create a list of 1 job, then submit the list.  Again, we
-        # could submit just the single job w/o the list, but submitting a list is
-        # good form.
-        listOfJobsToSubmit = []
-        listOfJobsToSubmit.append(job)
-        listOfSubmittedJobs = qb.submit(listOfJobsToSubmit)
-        id_list=[]
-        for job in listOfSubmittedJobs:
-            print(job['id'])
-            id_list.append(job['id'])
-        hou.ui.displayMessage(f"Job submitted to Qube, ID's {id_list}",buttons=("Ok",),title="Job Submitted")
 
+job = {{}}
+job['name'] = f"{self.project_name.text()}"
+job['prototype'] = 'cmdrange'
+package = {{}}
+package['shell']="/bin/bash"
+pre_render="cd /opt/software/hfs19.5.303/; source houdini_setup_bash; "
+render_command=f"hython $HB/hrender.py -e -F QB_FRAME_NUMBER -R -d {self.output_driver.text()} {self.farm_location.text()}"
+package['cmdline']=f"{{pre_render}} {{render_command}}"
+        
+job['package'] = package
+job['cpus'] = 8
+   
+env={{"HOME" :f"/render/{self.user}",  
+            "SESI_LMHOST" : "hamworthy.bournemouth.ac.uk",
+            "PIXAR_LICENSE_FILE" : "9010@talavera.bournemouth.ac.uk",            
+            }}
+job['env']=env
+
+agendaRange = f'{range}'  
+agenda = qb.genframes(agendaRange)
+
+job['agenda'] = agenda
+        
+listOfJobsToSubmit = []
+listOfJobsToSubmit.append(job)
+listOfSubmittedJobs = qb.submit(listOfJobsToSubmit)
+id_list=[]
+for job in listOfSubmittedJobs:
+    print(job['id'])
+    id_list.append(job['id'])
+
+print(id_list)
+"""
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            with open(tmpdirname+"/payload.py","w") as fp :
+                fp.write(payload)
+            output=subprocess.run(["/usr/bin/python3",f"{tmpdirname}/payload.py"],capture_output=True,env={})
+            j=output.stdout.decode("utf-8") 
+            hou.ui.displayMessage(f"Job submitted to Qube, ID's {j}",buttons=("Ok",),title="Job Submitted")
+            #print(j)
+            #os.system(f"unset PYTHONHOME; /usr/bin/python3 {tmpdirname}/payload.py")
+            #os.system(f"cp {tmpdirname}/payload.py /home/jmacey/tmp")
         self.done(0)
     
     def closeEvent(self,event) :    
@@ -166,6 +162,9 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
     def set_farm_location(self) :
         file_and_path=hou.ui.selectFile(None,"Choose file on Farm",False,hou.fileType.Hip,"","",False,False,hou.fileChooserMode.Write)
+        # work around for weird bug where window hides behind main one
+        self.raise_()            
+
         if file_and_path == "" :
                 return
         if "$HOME" in file_and_path :
@@ -179,7 +178,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
 
     def select_output_driver(self) :
-        output=hou.ui.selectNode(node_type_filter=hou.nodeTypeFilter.Rop)
+        output=hou.ui.selectNode(node_type_filter=hou.nodeTypeFilter.Rop,initial_node="/stage")
         # work around for weird bug where window hides behind main one
         self.raise_()            
 

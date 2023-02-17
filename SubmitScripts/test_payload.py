@@ -71,7 +71,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
     output=subprocess.run(["/usr/bin/python3",f"{tmpdirname}/payload.py"],capture_output=True)
     #os.system(f"ls {tmpdirname}")
     #os.system(f"/usr/bin/python3 {tmpdirname}/payload.py")
-    print(output.stdout)
+    print(output.stdout.decode("utf-8") )
     
 
 
