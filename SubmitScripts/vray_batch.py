@@ -57,7 +57,7 @@ def main(project_name  :str , cpus : int, scene_file : str, start_frame : int , 
     job['prototype'] = 'cmdrange'
 
     package = {}
-
+    package['shell']="/bin/bash"
     # Just like the last example, we create a package parameter called 'cmdline'.
     # This is the command that will be run for every agenda item.  QB_FRAME_NUMBER,
     # however, is unique to cmdrange.  The text QB_FRAME_NUMBER will be replaced with
