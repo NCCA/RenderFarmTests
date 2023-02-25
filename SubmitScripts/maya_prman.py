@@ -40,12 +40,12 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.project_name.setToolTip("This is the name of the project as it will appear on the Qube GUI")
         self.gridLayout.addWidget(self.project_name, 0, 1, 1, 5)
 
-        # row 1 select output drive
-        self.select_output=QtWidgets.QPushButton("Camera")
-        self.select_output.setToolTip("select camera to render")
-        self.gridLayout.addWidget(self.select_output,1,0,1,1)
+        # row 1 select camera
+        label=QtWidgets.QLabel("Camera")
+        self.gridLayout.addWidget(label,1,0,1,1)
         self.camera = QtWidgets.QComboBox(self)
         self.camera.addItems(cmds.listCameras( p=True ))
+        self.camera.setToolTip("select camera to render")
         
         self.gridLayout.addWidget(self.camera, 1, 1, 1, 5)
 
@@ -76,28 +76,44 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
         self.gridLayout.addWidget(self.by_frame,2,5,1,1)
 
-        # row 3
-        self.location_button=QtWidgets.QPushButton("Farm Location")
-        self.location_button.setToolTip("Select the file to render, not this must be on the farm mount")
-        self.gridLayout.addWidget(self.location_button,3,0,1,1)
-        self.location_button.clicked.connect(self.set_farm_location)
+        # row 3 Scene file selection
+        self.scene_button=QtWidgets.QPushButton("Scene File")
+        self.scene_button.setToolTip("Select the file to render, not this must be on the farm mount")
+        self.gridLayout.addWidget(self.scene_button,3,0,1,1)
+        self.scene_button.clicked.connect(self.set_scene_location)
         base_path=cmds.file(q=True, sn=True).split("/")[-2]
-        
-        location=f"/render/{self.user}/{base_path}/{cmds.file(q=True, sn=True, shn=True)}"
-        self.farm_location = QtWidgets.QLineEdit(location, self)
-        self.farm_location.setToolTip("""This is the full path to the hip file on the farm, you can enter this manually or press the button to select.
+        project_path=cmds.workspace(q=True,sn=True).split("/")[-1]
+
+        location=f"/render/{self.user}/{project_path}/{base_path}/{cmds.file(q=True, sn=True, shn=True)}"
+        self.scene_location = QtWidgets.QLineEdit(location, self)
+        self.scene_location.setToolTip("""This is the full path to the hip file on the farm, you can enter this manually or press the button to select.
         If the farm is mounted on /render you can navigate to here and select the file. If not you must specify the full path and name manually. 
         If this is not correct the renders will fail""")
-        self.gridLayout.addWidget(self.farm_location, 3, 1, 1, 5)
+        self.gridLayout.addWidget(self.scene_location, 3, 1, 1, 5)
+   
+        # row 4
+        # Project location
+        self.project_button=QtWidgets.QPushButton("Project Location")
+        self.project_button.setToolTip("Select the maya project for the scene")
+        self.gridLayout.addWidget(self.project_button,4,0,1,1)
+        self.project_button.clicked.connect(self.set_project_location)
+        base_path=cmds.workspace(q=True,sn=True).split("/")[-1]
+        
+        location=f"/render/{self.user}/{base_path}/"
+        self.project_location = QtWidgets.QLineEdit(location, self)
+        self.project_location.setToolTip("""This is the full path to the maya project on the farm, you can enter this manually or press the button to select.
+        If the farm is mounted on /render you can navigate to here and select the file. If not you must specify the full path and name manually. 
+        If this is not correct the renders will fail""")
+        self.gridLayout.addWidget(self.project_location, 4, 1, 1, 5)
    
 
-        # row 4
+        # row 5
         # cancel button
 
         self.Cancel = QtWidgets.QPushButton("Cancel", self)
         self.Cancel.setToolTip("Close the submit dialog")
         self.Cancel.clicked.connect(self.close)
-        self.gridLayout.addWidget(self.Cancel, 4, 0, 1, 1)
+        self.gridLayout.addWidget(self.Cancel, 5, 0, 1, 1)
 
         # Screen Shot button
 
@@ -105,7 +121,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.submit.pressed.connect(self.submit_job)
         self.submit.setEnabled(True)
         self.submit.setToolTip("Submit job to the farm, you must select a ROP before this will activate")
-        self.gridLayout.addWidget(self.submit, 4, 5, 1, 1)
+        self.gridLayout.addWidget(self.submit, 5, 5, 1, 1)
 
 
     def submit_job(self) :
@@ -127,7 +143,7 @@ job['prototype'] = 'cmdrange'
 package = {{}}
 package['shell']="/bin/bash"
 
-render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r renderman -proj {self.project.text()} -cam {self.camera.currentText()} {self.farm_location.text()} "
+render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r renderman -proj {self.project_location.text()} -cam {self.camera.currentText()} {self.scene_location.text()} "
 
 
 package['cmdline']=f"{{render_command}}"
@@ -167,18 +183,22 @@ print(id_list)
                 fp.write(payload)
             output=subprocess.run(["/usr/bin/python3",f"{tmpdirname}/payload.py"],capture_output=True,env={})
             j=output.stdout.decode("utf-8") 
-            
-            hou.ui.displayMessage(f"Job submitted to Qube, ID's {j}",buttons=("Ok",),title="Job Submitted")
+            print(j)            
+            #hou.ui.displayMessage(f"Job submitted to Qube, ID's {j}",buttons=("Ok",),title="Job Submitted")
         self.done(0)
     
     
-    def set_farm_location(self) :
+    def set_scene_location(self) :
         basicFilter = "*.mb;*.ma"
         cmds.fileDialog2(fileFilter=basicFilter, dialogStyle=1)
         # work around for weird bug where window hides behind main one
         self.raise_()            
 
-        
+    def set_project_location(self) :
+        cmds.fileDialog2( dialogStyle=3)
+        # work around for weird bug where window hides behind main one
+        self.raise_()            
+
 
         
 if os.environ.get("QB_SUPERVISOR") is None :
