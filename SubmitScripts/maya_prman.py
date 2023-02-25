@@ -1,16 +1,14 @@
 import os
 import platform
-import sys
 import subprocess
+import sys
 import tempfile
+
 import maya.cmds as cmds
 import maya.OpenMayaAnim as OMA
-from shiboken2 import wrapInstance
-
-
 from PySide2 import QtCore, QtWidgets
-
 from shiboken2 import wrapInstance
+
 
 def get_main_window():
     """this returns the maya main window for parenting"""
@@ -36,6 +34,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
         # row 0 project name
         label=QtWidgets.QLabel("Project Name")
+        name=cmds.workspace(q=True,sn=True)
         self.gridLayout.addWidget(label,0,0,1,1)
         self.project_name = QtWidgets.QLineEdit(f"{self.user}_{name}", self)
         self.project_name.setToolTip("This is the name of the project as it will appear on the Qube GUI")
@@ -45,8 +44,10 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.select_output=QtWidgets.QPushButton("Camera")
         self.select_output.setToolTip("select camera to render")
         self.gridLayout.addWidget(self.select_output,1,0,1,1)
-        self.output_driver = QtWidgets.QComboBox(self)
-        self.gridLayout.addWidget(self.output_driver, 1, 1, 1, 5)
+        self.camera = QtWidgets.QComboBox(self)
+        self.camera.addItems(cmds.listCameras( p=True ))
+        
+        self.gridLayout.addWidget(self.camera, 1, 1, 1, 5)
 
         # row 2
         label=QtWidgets.QLabel("Start Frame")
@@ -102,7 +103,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
         self.submit = QtWidgets.QPushButton("Submit", self)
         self.submit.pressed.connect(self.submit_job)
-        self.submit.setEnabled(False)
+        self.submit.setEnabled(True)
         self.submit.setToolTip("Submit job to the farm, you must select a ROP before this will activate")
         self.gridLayout.addWidget(self.submit, 4, 5, 1, 1)
 
@@ -125,17 +126,25 @@ job['name'] = f"{self.project_name.text()}"
 job['prototype'] = 'cmdrange'
 package = {{}}
 package['shell']="/bin/bash"
-pre_render="cd /opt/software/hfs19.5.303/; source houdini_setup_bash; "
-render_command=f"hython $HB/hrender.py -e -F QB_FRAME_NUMBER -R -d {self.output_driver.text()} {self.farm_location.text()}"
-package['cmdline']=f"{{pre_render}} {{render_command}}"
+
+render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r renderman -proj {self.project.text()} -cam {self.camera.currentText()} {self.farm_location.text()} "
+
+
+package['cmdline']=f"{{render_command}}"
         
 job['package'] = package
-job['cpus'] = 8
+job['cpus'] = 2
    
 env={{"HOME" :f"/render/{self.user}",  
-            "SESI_LMHOST" : "hamworthy.bournemouth.ac.uk",
-            "PIXAR_LICENSE_FILE" : "9010@talavera.bournemouth.ac.uk",            
-            }}
+        "RMANTREE":"/opt/software/pixar/RenderManProServer-24.4/",
+        "PATH":"/opt/software/pixar/RenderManProServer-24.4/bin:/usr/bin:/usr/sbin:/opt/software/autodesk/maya2023/bin/",
+        "MAYA_RENDER_DESC_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/etc/",
+        "PIXAR_LICENSE_FILE":"9010@talavera.bournemouth.ac.uk",        
+        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs",
+        "HOME" : "/render/jmacey",
+        "MAYA_PLUG_IN_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/plug-ins",
+        "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts"
+        }}
 job['env']=env
 
 agendaRange = f'{range}'  
@@ -158,28 +167,18 @@ print(id_list)
                 fp.write(payload)
             output=subprocess.run(["/usr/bin/python3",f"{tmpdirname}/payload.py"],capture_output=True,env={})
             j=output.stdout.decode("utf-8") 
+            
             hou.ui.displayMessage(f"Job submitted to Qube, ID's {j}",buttons=("Ok",),title="Job Submitted")
         self.done(0)
     
-    def closeEvent(self,event) :    
-        super(RenderFarmSubmitDialog, self).closeEvent(event)
-
+    
     def set_farm_location(self) :
-        file_and_path=hou.ui.selectFile(None,"Choose file on Farm",False,hou.fileType.Hip,"","",False,False,hou.fileChooserMode.Write)
+        basicFilter = "*.mb;*.ma"
+        cmds.fileDialog2(fileFilter=basicFilter, dialogStyle=1)
         # work around for weird bug where window hides behind main one
         self.raise_()            
 
-        if file_and_path == "" :
-                return
-        if "$HOME" in file_and_path :
-                file_and_path=file_and_path.replace("$HOME",str(hou.getenv("HOME"))) 
-        elif "$HIP" in file_and_path :
-                file_and_path=file_and_path.replace("$HIP",str(hou.getenv("HIP"))) 
-        elif "$JOB" in file_and_path :
-                file_and_path=file_and_path.replace("$JOB",str(hou.getenv("JOB"))) 
-        self.farm_location.setText(file_and_path)
-
-
+        
 
         
 if os.environ.get("QB_SUPERVISOR") is None :
