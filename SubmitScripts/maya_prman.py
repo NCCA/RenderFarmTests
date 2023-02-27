@@ -115,13 +115,33 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
 
         row +=1 
-        self.override_output = QtWidgets.QCheckBox("Override Render Globals")
-        self.gridLayout.addWidget(self.override_output,row,0,1,1)
+        self.override_output_dir = QtWidgets.QCheckBox("Set Output Directory")
+        self.override_output_dir.setChecked(False)
+        self.override_output_dir.stateChanged.connect(self.toggle_override_output_dir)
+        
+        self.gridLayout.addWidget(self.override_output_dir,row,0,1,1)
+        self.output_dir=QtWidgets.QLineEdit(f"/render/{self.user}/output/")
+        self.output_dir.setReadOnly(True)
+        self.output_dir.setToolTip("this folder must be on the farm")
+        self.gridLayout.addWidget(self.output_dir,row,1,1,1)
+        # self.output_name=QtWidgets.QLineEdit("FileNameNotSet")
+        # self.output_name.setReadOnly(True)
+
+        # self.output_name.setToolTip("Base name of the overrided output")
+        # self.gridLayout.addWidget(self.output_name,row,2,1,1)
+        # image_formats=["exr","maya","png","deepexr","tif","jpeg"]
+        # self.output_format=QtWidgets.QComboBox()
+        # self.output_format.setEnabled(False)
+        # self.output_format.addItems(image_formats)
+        # self.gridLayout.addWidget(self.output_format,row,3,1,1)
+        
+ 
+
         # -rd path                    Directory in which to store image file
         # -of string                  Output image file format. See the Render Settings window to
         #     find available formats
         # -im filename                Image file output name
-        
+
         row+=1
         # cancel button
 
@@ -138,9 +158,20 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.submit.setToolTip("Submit job to the farm, you must select a ROP before this will activate")
         self.gridLayout.addWidget(self.submit, row, 5, 1, 1)
 
+    def toggle_override_output_dir(self,state) :
+        # self.output_format.setEnabled(state)
+        # self.output_dir.setReadOnly(not state)
+        # self.output_name.setReadOnly(not state)
+        pass
 
     def submit_job(self) :
         range=f"{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}"
+        override_output=""
+        # if self.override_output.isChecked() :
+        #     override_output=f""
+        
+        
+        
         payload=f"""
 import os
 import sys
