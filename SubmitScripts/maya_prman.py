@@ -31,57 +31,63 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         # convert to int here, do we render non int frames?
         self.min_frame=int(time_line.minTime().value())
         self.max_frame=int(time_line.maxTime().value())
-
+        row=0
         # row 0 project name
         label=QtWidgets.QLabel("Project Name")
         name=cmds.workspace(q=True,sn=True)
-        self.gridLayout.addWidget(label,0,0,1,1)
+        self.gridLayout.addWidget(label,row,0,1,1)
         self.project_name = QtWidgets.QLineEdit(f"{self.user}_{name}", self)
         self.project_name.setToolTip("This is the name of the project as it will appear on the Qube GUI")
-        self.gridLayout.addWidget(self.project_name, 0, 1, 1, 5)
+        self.gridLayout.addWidget(self.project_name, row, 1, 1, 5)
 
         # row 1 select camera
+        row+=1
         label=QtWidgets.QLabel("Camera")
-        self.gridLayout.addWidget(label,1,0,1,1)
+        self.gridLayout.addWidget(label,row,0,1,1)
         self.camera = QtWidgets.QComboBox(self)
         self.camera.addItems(cmds.listCameras( p=True ))
         self.camera.setToolTip("select camera to render")
         
-        self.gridLayout.addWidget(self.camera, 1, 1, 1, 5)
+        self.gridLayout.addWidget(self.camera, row, 1, 1, 5)
 
         # row 2
+        row+=2
         label=QtWidgets.QLabel("Start Frame")
-        self.gridLayout.addWidget(label,2,0,1,1)
+        self.gridLayout.addWidget(label,row,0,1,1)
         self.start_frame=QtWidgets.QSpinBox()
         self.start_frame.setToolTip("Start frame for rendering, set from ROP but can be changed here, this will override the ROP value on the farm")
 
         self.start_frame.setRange(self.min_frame,self.max_frame)
         self.start_frame.setValue(self.min_frame)
-        self.gridLayout.addWidget(self.start_frame,2,1,1,1)
+        self.gridLayout.addWidget(self.start_frame,row,1,1,1)
         
         label=QtWidgets.QLabel("End Frame")
-        self.gridLayout.addWidget(label,2,2,1,1)
+        self.gridLayout.addWidget(label,row,2,1,1)
         self.end_frame=QtWidgets.QSpinBox()
         self.end_frame.setRange(self.min_frame,self.max_frame)
         self.end_frame.setValue(self.max_frame)
         self.end_frame.setToolTip("End frame for rendering, set from ROP but can be changed here, this will override the ROP value on the farm")
 
-        self.gridLayout.addWidget(self.end_frame,2,3,1,1)
+        self.gridLayout.addWidget(self.end_frame,row,3,1,1)
 
         label=QtWidgets.QLabel("By Frame")
-        self.gridLayout.addWidget(label,2,4,1,1)
+        self.gridLayout.addWidget(label,row,4,1,1)
         self.by_frame=QtWidgets.QSpinBox()
         self.by_frame.setValue(1)
         self.by_frame.setToolTip("Frame Step for rendering, set from ROP but can be changed here, this will override the ROP value on the farm")
 
-        self.gridLayout.addWidget(self.by_frame,2,5,1,1)
+        self.gridLayout.addWidget(self.by_frame,row,5,1,1)
 
         # row 3 Scene file selection
+        row+=1
         self.scene_button=QtWidgets.QPushButton("Scene File")
         self.scene_button.setToolTip("Select the file to render, not this must be on the farm mount")
-        self.gridLayout.addWidget(self.scene_button,3,0,1,1)
+        self.gridLayout.addWidget(self.scene_button,row,0,1,1)
         self.scene_button.clicked.connect(self.set_scene_location)
-        base_path=cmds.file(q=True, sn=True).split("/")[-2]
+        try :
+            base_path=cmds.file(q=True, sn=True).split("/")[-2]
+        except IndexError :
+            base_path="file not loaded"
         project_path=cmds.workspace(q=True,sn=True).split("/")[-1]
 
         location=f"/render/{self.user}/{project_path}/{base_path}/{cmds.file(q=True, sn=True, shn=True)}"
@@ -89,13 +95,14 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.scene_location.setToolTip("""This is the full path to the hip file on the farm, you can enter this manually or press the button to select.
         If the farm is mounted on /render you can navigate to here and select the file. If not you must specify the full path and name manually. 
         If this is not correct the renders will fail""")
-        self.gridLayout.addWidget(self.scene_location, 3, 1, 1, 5)
+        self.gridLayout.addWidget(self.scene_location, row, 1, 1, 5)
    
         # row 4
+        row+=1
         # Project location
         self.project_button=QtWidgets.QPushButton("Project Location")
         self.project_button.setToolTip("Select the maya project for the scene")
-        self.gridLayout.addWidget(self.project_button,4,0,1,1)
+        self.gridLayout.addWidget(self.project_button,row,0,1,1)
         self.project_button.clicked.connect(self.set_project_location)
         base_path=cmds.workspace(q=True,sn=True).split("/")[-1]
         
@@ -104,24 +111,32 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.project_location.setToolTip("""This is the full path to the maya project on the farm, you can enter this manually or press the button to select.
         If the farm is mounted on /render you can navigate to here and select the file. If not you must specify the full path and name manually. 
         If this is not correct the renders will fail""")
-        self.gridLayout.addWidget(self.project_location, 4, 1, 1, 5)
-   
+        self.gridLayout.addWidget(self.project_location, row, 1, 1, 5)
 
-        # row 5
+
+        row +=1 
+        self.override_output = QtWidgets.QCheckBox("Override Render Globals")
+        self.gridLayout.addWidget(self.override_output,row,0,1,1)
+        # -rd path                    Directory in which to store image file
+        # -of string                  Output image file format. See the Render Settings window to
+        #     find available formats
+        # -im filename                Image file output name
+        
+        row+=1
         # cancel button
 
         self.Cancel = QtWidgets.QPushButton("Cancel", self)
         self.Cancel.setToolTip("Close the submit dialog")
         self.Cancel.clicked.connect(self.close)
-        self.gridLayout.addWidget(self.Cancel, 5, 0, 1, 1)
+        self.gridLayout.addWidget(self.Cancel, row, 0, 1, 1)
 
-        # Screen Shot button
+        # Submit button
 
         self.submit = QtWidgets.QPushButton("Submit", self)
         self.submit.pressed.connect(self.submit_job)
         self.submit.setEnabled(True)
         self.submit.setToolTip("Submit job to the farm, you must select a ROP before this will activate")
-        self.gridLayout.addWidget(self.submit, 5, 5, 1, 1)
+        self.gridLayout.addWidget(self.submit, row, 5, 1, 1)
 
 
     def submit_job(self) :
