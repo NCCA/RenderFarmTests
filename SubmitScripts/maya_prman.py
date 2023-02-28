@@ -172,6 +172,12 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.Cancel.clicked.connect(self.close)
         self.gridLayout.addWidget(self.Cancel, row, 0, 1, 1)
 
+        # Write script button
+        self.export = QtWidgets.QPushButton("Export Script", self)
+        self.export.setToolTip("Export Python Submit script")
+        self.export.clicked.connect(self.export_script)
+        self.gridLayout.addWidget(self.export, row, 1,1, 1)
+
         # Submit button
 
         self.submit = QtWidgets.QPushButton("Submit", self)
@@ -180,8 +186,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.submit.setToolTip("Submit job to the farm, you must select a ROP before this will activate")
         self.gridLayout.addWidget(self.submit, row, 5, 1, 1)
 
-
-    def submit_job(self) :
+    def _generate_payload(self) :
         range=f"{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}"
         set_output_dir=""
         if self.override_output_dir.isChecked() :
@@ -247,6 +252,16 @@ for job in listOfSubmittedJobs:
 
 print(id_list)
 """
+        return payload
+
+    def export_script(self) :
+        payload=self._generate_payload()
+        with open("/Users/jmacey/tmp/payload.py","w") as file :
+            file.write(payload)
+
+
+    def submit_job(self) :
+        payload=self._generate_payload()
         with tempfile.TemporaryDirectory() as tmpdirname:
             with open(tmpdirname+"/payload.py","w") as fp :
                 fp.write(payload)
