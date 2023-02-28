@@ -105,7 +105,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         If the farm is mounted on /render you can navigate to here and select the file. If not you must specify the full path and name manually. 
         If this is not correct the renders will fail""")
         self.gridLayout.addWidget(self.scene_location, row, 1, 1, 5)
-   
+
         # row 4
         row+=1
         # Project location
@@ -145,7 +145,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.output_filename.setToolTip("Override Filename in Render Globals")
         self.gridLayout.addWidget(self.output_filename,row,1,1,1)
 
- 
+
         row +=1 
         self.override_extension = QtWidgets.QCheckBox("Output Format")
         self.override_extension.setChecked(False)
@@ -193,15 +193,15 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         range=f"{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}"
         set_output_dir=""
         if self.override_output_dir.isChecked() :
-             set_output_dir=f"-rd {self.output_dir.text()}"
+            set_output_dir=f"-rd {self.output_dir.text()}"
         
         output_filename=""
         if self.override_filename.isChecked() :
-             output_filename=f"-im {self.output_filename.text()}"
+            output_filename=f"-im {self.output_filename.text()}"
         
         image_ext=""
         if self.override_extension.isChecked() :
-             image_ext=f"-of {self.output_extension.currentText()}"
+            image_ext=f"-of {self.output_extension.currentText()}"
         
         payload=f"""
 import os
@@ -227,17 +227,25 @@ package['cmdline']=f"{{render_command}}"
         
 job['package'] = package
 job['cpus'] = 2
-   
+
 env={{"HOME" :f"/render/{self.user}",  
         "RMANTREE":"/opt/software/pixar/RenderManProServer-24.4/",
         "PATH":"/opt/software/pixar/RenderManProServer-24.4/bin:/usr/bin:/usr/sbin:/opt/software/autodesk/maya2023/bin/",
-        "MAYA_RENDER_DESC_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/etc/:{ARNOLD_LOCATION}/",
+        "MAYA_RENDER_DESC_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/etc/:{ARNOLD_LOCATION}/:/opt/software/autodesk/maya2023/vray/rendererDesc/",
         "PIXAR_LICENSE_FILE":"9010@talavera.bournemouth.ac.uk",        
-        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs:{MAYA_ROOT}/lib/",
+        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs:{MAYA_ROOT}/lib/:/opt/software/vray_builds/vray/lib:",
         "HOME" : "/render/{self.user}",
         "MAYA_PLUG_IN_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/plug-ins:{ARNOLD_LOCATION}/plug-ins/",
-        "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts",
-        "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts"
+        "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts:/opt/software/autodesk/maya2023/vray/scripts",
+        "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts",
+        "ADSKFLEX_LICENSE_FILE" : "wrangle.bournemouth.ac.uk",
+        "RLM_LICENSE" : "5063@burton.bournemouth.ac.uk", 
+        "ARNOLD_LICENSE_ORDER" : "network",  
+        "VRAY_AUTH_CLIENT_FILE_PATH" : "/opt/software/",
+        "VRAY_OSL_PATH" : "/opt/software/vray_builds/vray/opensl",
+        "VRAY_PLUGINS" :"/opt/software/vray_builds/maya_vray/vrayplugins",
+        "VRAY_OSL_PATH_MAYA2023":"/opt/software/vray_builds/vray/opensl" 
+         
         }}
 job['env']=env
 
@@ -303,5 +311,3 @@ except:
 
 dialog = RenderFarmSubmitDialog()
 dialog.show()
-
-    
