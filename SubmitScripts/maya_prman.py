@@ -92,7 +92,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
 
         location=f"/render/{self.user}/{project_path}/{base_path}/{cmds.file(q=True, sn=True, shn=True)}"
         self.scene_location = QtWidgets.QLineEdit(location, self)
-        self.scene_location.setToolTip("""This is the full path to the hip file on the farm, you can enter this manually or press the button to select.
+        self.scene_location.setToolTip("""This is the full path to the maya file on the farm, you can enter this manually or press the button to select.
         If the farm is mounted on /render you can navigate to here and select the file. If not you must specify the full path and name manually. 
         If this is not correct the renders will fail""")
         self.gridLayout.addWidget(self.scene_location, row, 1, 1, 5)
@@ -117,31 +117,44 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         row +=1 
         self.override_output_dir = QtWidgets.QCheckBox("Set Output Directory")
         self.override_output_dir.setChecked(False)
-        self.override_output_dir.stateChanged.connect(self.toggle_override_output_dir)
         
         self.gridLayout.addWidget(self.override_output_dir,row,0,1,1)
         self.output_dir=QtWidgets.QLineEdit(f"/render/{self.user}/output/")
         self.output_dir.setReadOnly(True)
+        self.override_output_dir.stateChanged.connect(lambda state : self.output_dir.setReadOnly(not state))
         self.output_dir.setToolTip("this folder must be on the farm")
         self.gridLayout.addWidget(self.output_dir,row,1,1,1)
-        # self.output_name=QtWidgets.QLineEdit("FileNameNotSet")
-        # self.output_name.setReadOnly(True)
-
-        # self.output_name.setToolTip("Base name of the overrided output")
-        # self.gridLayout.addWidget(self.output_name,row,2,1,1)
-        # image_formats=["exr","maya","png","deepexr","tif","jpeg"]
-        # self.output_format=QtWidgets.QComboBox()
-        # self.output_format.setEnabled(False)
-        # self.output_format.addItems(image_formats)
-        # self.gridLayout.addWidget(self.output_format,row,3,1,1)
         
+        row +=1 
+        self.override_filename = QtWidgets.QCheckBox("Output Filename")
+        self.override_filename.setChecked(False)
+        
+        self.gridLayout.addWidget(self.override_filename,row,0,1,1)
+        self.output_filename=QtWidgets.QLineEdit(f"CustomFilename")
+        self.output_filename.setReadOnly(True)
+        self.override_filename.stateChanged.connect(lambda state : self.output_filename.setReadOnly(not state))
+        self.output_filename.setToolTip("Override Filename in Render Globals")
+        self.gridLayout.addWidget(self.output_filename,row,1,1,1)
+
  
+        row +=1 
+        self.override_extension = QtWidgets.QCheckBox("Output Format")
+        self.override_extension.setChecked(False)
 
-        # -rd path                    Directory in which to store image file
-        # -of string                  Output image file format. See the Render Settings window to
-        #     find available formats
-        # -im filename                Image file output name
+        self.gridLayout.addWidget(self.override_extension,row,0,1,1)
+        self.output_extension=QtWidgets.QComboBox()
+        self.output_extension.addItems(["exr","png","tif","jpeg","deepexr","maya"])
+        self.output_extension.setDisabled(True)
+        self.override_extension.stateChanged.connect(lambda state : self.output_extension.setDisabled(not state))
+        self.output_extension.setToolTip("Override image extension in Render Globals")
+        self.gridLayout.addWidget(self.output_extension,row,1,1,1)
 
+        row +=1 
+        label=QtWidgets.QLabel("Extra Commands")
+        self.gridLayout.addWidget(label,row,0,1,1)
+        self.extra_commands=QtWidgets.QLineEdit()
+        self.gridLayout.addWidget(self.extra_commands,row,1,1,5)
+        
         row+=1
         # cancel button
 
@@ -158,19 +171,20 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.submit.setToolTip("Submit job to the farm, you must select a ROP before this will activate")
         self.gridLayout.addWidget(self.submit, row, 5, 1, 1)
 
-    def toggle_override_output_dir(self,state) :
-        # self.output_format.setEnabled(state)
-        # self.output_dir.setReadOnly(not state)
-        # self.output_name.setReadOnly(not state)
-        pass
 
     def submit_job(self) :
         range=f"{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}"
-        override_output=""
-        # if self.override_output.isChecked() :
-        #     override_output=f""
+        set_output_dir=""
+        if self.override_output_dir.isChecked() :
+             set_output_dir=f" -rf {self.output_dir.text()}"
         
+        output_filename=""
+        if self.override_filename.isChecked() :
+             output_filename=f" -im {self.output_filename.text()}"
         
+        image_ext=""
+        if self.override_extension.isChecked() :
+             image_ext=f" -of {self.output_extension.text()}"
         
         payload=f"""
 import os
@@ -189,7 +203,7 @@ job['prototype'] = 'cmdrange'
 package = {{}}
 package['shell']="/bin/bash"
 
-render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r renderman -proj {self.project_location.text()} -cam {self.camera.currentText()} {self.scene_location.text()} "
+render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r renderman -proj {set_output_dir} {output_filename} {image_ext} {self.project_location.text()}  -cam {self.camera.currentText()} {self.extra_commands.text()} {self.scene_location.text()} "
 
 
 package['cmdline']=f"{{render_command}}"
