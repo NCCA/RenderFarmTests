@@ -187,6 +187,9 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.submit, row, 5, 1, 1)
 
     def _generate_payload(self) :
+        ARNOLD_LOCATION='/opt/software/autodesk/arnold/maya2023'
+        MAYA_ROOT='/opt/software/autodesk/maya2023/'
+
         range=f"{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}"
         set_output_dir=""
         if self.override_output_dir.isChecked() :
@@ -228,12 +231,13 @@ job['cpus'] = 2
 env={{"HOME" :f"/render/{self.user}",  
         "RMANTREE":"/opt/software/pixar/RenderManProServer-24.4/",
         "PATH":"/opt/software/pixar/RenderManProServer-24.4/bin:/usr/bin:/usr/sbin:/opt/software/autodesk/maya2023/bin/",
-        "MAYA_RENDER_DESC_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/etc/",
+        "MAYA_RENDER_DESC_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/etc/:{ARNOLD_LOCATION}/",
         "PIXAR_LICENSE_FILE":"9010@talavera.bournemouth.ac.uk",        
-        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs",
-        "HOME" : "/render/jmacey",
-        "MAYA_PLUG_IN_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/plug-ins",
-        "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts"
+        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs:{MAYA_ROOT}/lib/",
+        "HOME" : "/render/{self.user}",
+        "MAYA_PLUG_IN_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/plug-ins:{ARNOLD_LOCATION}/plug-ins/",
+        "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts",
+        "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts"
         }}
 job['env']=env
 
