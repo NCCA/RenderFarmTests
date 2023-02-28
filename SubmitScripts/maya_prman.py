@@ -32,6 +32,15 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.min_frame=int(time_line.minTime().value())
         self.max_frame=int(time_line.maxTime().value())
         row=0
+        label=QtWidgets.QLabel("Active Renderer")
+        self.gridLayout.addWidget(label, row, 0, 1, 1)
+        self.active_renderer=QtWidgets.QComboBox()
+        self.active_renderer.addItems(["file","renderman","vray","arnold","sw","hw2","default"])
+        self.active_renderer.setToolTip("Choose the active renderer, note is file is chose it will use the one set in the maya file")
+        self.gridLayout.addWidget(self.active_renderer, row, 1, 1, 3)
+
+
+        row+=1
         # row 0 project name
         label=QtWidgets.QLabel("Project Name")
         name=cmds.workspace(q=True,sn=True)
@@ -176,15 +185,15 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         range=f"{self.start_frame.value()}-{self.end_frame.value()}x{self.by_frame.value()}"
         set_output_dir=""
         if self.override_output_dir.isChecked() :
-             set_output_dir=f" -rf {self.output_dir.text()}"
+             set_output_dir=f"-rd {self.output_dir.text()}"
         
         output_filename=""
         if self.override_filename.isChecked() :
-             output_filename=f" -im {self.output_filename.text()}"
+             output_filename=f"-im {self.output_filename.text()}"
         
         image_ext=""
         if self.override_extension.isChecked() :
-             image_ext=f" -of {self.output_extension.text()}"
+             image_ext=f"-of {self.output_extension.currentText()}"
         
         payload=f"""
 import os
@@ -203,7 +212,7 @@ job['prototype'] = 'cmdrange'
 package = {{}}
 package['shell']="/bin/bash"
 
-render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r renderman -proj {set_output_dir} {output_filename} {image_ext} {self.project_location.text()}  -cam {self.camera.currentText()} {self.extra_commands.text()} {self.scene_location.text()} "
+render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r {self.active_renderer.currentText()}  {set_output_dir} {output_filename} {image_ext}  -proj {self.project_location.text()}  -cam {self.camera.currentText()} {self.extra_commands.text()} {self.scene_location.text()} "
 
 
 package['cmdline']=f"{{render_command}}"
