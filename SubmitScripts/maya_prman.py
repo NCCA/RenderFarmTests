@@ -37,8 +37,14 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.active_renderer=QtWidgets.QComboBox()
         self.active_renderer.addItems(["file","renderman","vray","arnold","sw","hw2","default"])
         self.active_renderer.setToolTip("Choose the active renderer, note is file is chose it will use the one set in the maya file")
-        self.gridLayout.addWidget(self.active_renderer, row, 1, 1, 3)
-
+        self.gridLayout.addWidget(self.active_renderer, row, 1, 1, 2)
+        label=QtWidgets.QLabel("CPUs")
+        self.gridLayout.addWidget(label, row, 3, 1, 1)
+        self.cpus=QtWidgets.QComboBox()
+        self.cpus.addItems(["1","2","3","4","5","6"])
+        self.cpus.setToolTip("This is the number of nodes to use when rendering, please respect others on the farm and only use max when usage on the farm is low")
+        self.cpus.setCurrentIndex(1)
+        self.gridLayout.addWidget(self.cpus,row,4,1,1)
 
         row+=1
         # row 0 project name
@@ -226,15 +232,15 @@ render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r {self.active_re
 package['cmdline']=f"{{render_command}}"
         
 job['package'] = package
-job['cpus'] = 2
+job['cpus'] = f"{self.cpus.currentText()}"
 
 env={{"HOME" :f"/render/{self.user}",  
         "RMANTREE":"/opt/software/pixar/RenderManProServer-24.4/",
         "PATH":"/opt/software/pixar/RenderManProServer-24.4/bin:/usr/bin:/usr/sbin:/opt/software/autodesk/maya2023/bin/",
         "MAYA_RENDER_DESC_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/etc/:{ARNOLD_LOCATION}/:/opt/software/autodesk/maya2023/vray/rendererDesc/",
         "PIXAR_LICENSE_FILE":"9010@talavera.bournemouth.ac.uk",        
-        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs:{MAYA_ROOT}/lib/:/opt/software/autodesk/maya2023/vray/lib:/opt/software/autodesk/maya2023/vray/plug-ins",
-        "HOME" : "/render/{self.user}",
+        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:{MAYA_ROOT}/lib/:/opt/software/autodesk/maya2023/vray/lib:/opt/software/autodesk/maya2023/vray/plug-ins",
+        "HOME" : "/render/{self.user}", 
         "MAYA_PLUG_IN_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/plug-ins:{ARNOLD_LOCATION}/plug-ins/:/opt/software/autodesk/maya2023/vray/plug-ins",
         "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts:/opt/software/autodesk/maya2023/vray/scripts:/opt/software/autodesk/maya2023/vray/scripts",
         "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts:/opt/software/autodesk/maya2023/vray/scripts/",
