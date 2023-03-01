@@ -203,7 +203,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         if self.override_extension.isChecked() :
             image_ext=f"-of {self.output_extension.currentText()}"
         
-        payload=f"""
+        payload=f"""#!/usr/bin/python3 
 import os
 import sys
 sys.path.insert(0,"/public/devel/2022/pfx/qube/api/python/")
@@ -267,9 +267,13 @@ print(id_list)
         return payload
 
     def export_script(self) :
-        payload=self._generate_payload()
-        with open("/Users/jmacey/tmp/payload.py","w") as file :
-            file.write(payload)
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,"Select Filename Name","payload.py",
+            ("Python Files (*.py)"))
+        if filename != "" :
+            payload=self._generate_payload()
+            with open("/Users/jmacey/tmp/payload.py","w") as file :
+                file.write(payload)
 
 
     def submit_job(self) :
