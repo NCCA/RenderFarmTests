@@ -39,7 +39,16 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.active_renderer=QtWidgets.QComboBox()
         self.active_renderer.addItems(["file","renderman","vray","arnold","sw","hw2","default"])
         self.active_renderer.setToolTip("Choose the active renderer, note is file is chose it will use the one set in the maya file")
-        self.gridLayout.addWidget(self.active_renderer, row, 1, 1, 3)
+        self.gridLayout.addWidget(self.active_renderer, row, 1, 1, 2)
+        label=QtWidgets.QLabel("Numeber of CPUs")
+        self.gridLayout.addWidget(label, row, 3, 1, 1)
+        
+        self.cpus=QtWidgets.QComboBox()
+        self.cpus.addItems(["1","2","3","4","5","6"])
+        self.cpus.setCurrentIndex(1)
+        self.cpus.setToolTip("number of nodes to use, please be respectful of others and only use high numbers if farm is empty")
+        self.gridLayout.addWidget(self.cpus, row, 4, 1, 1)
+        
 
         # 2nd row project name 
         row+=1
