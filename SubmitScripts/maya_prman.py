@@ -233,18 +233,21 @@ env={{"HOME" :f"/render/{self.user}",
         "PATH":"/opt/software/pixar/RenderManProServer-24.4/bin:/usr/bin:/usr/sbin:/opt/software/autodesk/maya2023/bin/",
         "MAYA_RENDER_DESC_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/etc/:{ARNOLD_LOCATION}/:/opt/software/autodesk/maya2023/vray/rendererDesc/",
         "PIXAR_LICENSE_FILE":"9010@talavera.bournemouth.ac.uk",        
-        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs:{MAYA_ROOT}/lib/:/opt/software/vray_builds/vray/lib:",
+        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs:{MAYA_ROOT}/lib/:/opt/software/autodesk/maya2023/vray/lib:/opt/software/autodesk/maya2023/vray/plug-ins",
         "HOME" : "/render/{self.user}",
-        "MAYA_PLUG_IN_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/plug-ins:{ARNOLD_LOCATION}/plug-ins/",
-        "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts:/opt/software/autodesk/maya2023/vray/scripts",
-        "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts",
+        "MAYA_PLUG_IN_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/plug-ins:{ARNOLD_LOCATION}/plug-ins/:/opt/software/autodesk/maya2023/vray/plug-ins",
+        "MAYA_SCRIPT_PATH" : "/opt/software/pixar/RenderManForMaya-24.4/scripts:/opt/software/autodesk/maya2023/vray/scripts:/opt/software/autodesk/maya2023/vray/scripts",
+        "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts:/opt/software/autodesk/maya2023/vray/scripts/",
         "ADSKFLEX_LICENSE_FILE" : "wrangle.bournemouth.ac.uk",
         "RLM_LICENSE" : "5063@burton.bournemouth.ac.uk", 
         "ARNOLD_LICENSE_ORDER" : "network",  
         "VRAY_AUTH_CLIENT_FILE_PATH" : "/opt/software/",
-        "VRAY_OSL_PATH" : "/opt/software/vray_builds/vray/opensl",
-        "VRAY_PLUGINS" :"/opt/software/vray_builds/maya_vray/vrayplugins",
-        "VRAY_OSL_PATH_MAYA2023":"/opt/software/vray_builds/vray/opensl" 
+        "VRAY_OSL_PATH" : "/opt/software/autodesk/maya2023/vray/bin",
+        "VRAY_PLUGINS" :"/opt/software/autodesk/maya2023/vray/vrayplugins",
+        "VRAY_OSL_PATH_MAYA2023":"/opt/software/vray_builds/vray/opensl",
+        "VRAY_FOR_MAYA2023_MAIN" : "/opt/software/autodesk/maya2023/vray/",
+        "VRAY_PATH" : "/opt/software/autodesk/maya2023/vray/bin",
+        "VRAY_FOR_MAYA2023_PLUGINS" : "/opt/software/autodesk/maya2023/vray/vrayplugins"       
          
         }}
 job['env']=env
@@ -272,7 +275,7 @@ print(id_list)
             ("Python Files (*.py)"))
         if filename != "" :
             payload=self._generate_payload()
-            with open("/Users/jmacey/tmp/payload.py","w") as file :
+            with open(filename,"w") as file :
                 file.write(payload)
 
 
