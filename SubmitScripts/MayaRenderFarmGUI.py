@@ -21,7 +21,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         super().__init__(parent)
         # Move to Build mode
         # Set the GUI components and layout
-        self.setWindowTitle("NCCA Renderfarm Submit Tool Renderman For Maya")
+        self.setWindowTitle("NCCA Renderfarm Submit Tool")
         self.resize(600, 280)
         # Main layout for form
         self.gridLayout = QtWidgets.QGridLayout(self)
@@ -240,9 +240,8 @@ env={{"HOME" :f"/render/{self.user}",
         "MAYA_PLUG_IN_PATH" : f"{RFM_LOCATION}/plug-ins:{ARNOLD_LOCATION}/plug-ins/:{VRAY_LOCATION}/plug-ins",
         "MAYA_SCRIPT_PATH" : f"{RFM_LOCATION}/scripts:{VRAY_LOCATION}/scripts",
         "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts:{VRAY_LOCATION}/scripts",
-        "ADSKFLEX_LICENSE_FILE" : "wrangle.bournemouth.ac.uk",
+        "ADSKFLEX_LICENSE_FILE" : "@wrangle.bournemouth.ac.uk",
         "RLM_LICENSE" : "5063@burton.bournemouth.ac.uk", 
-        "ARNOLD_LICENSE_ORDER" : "network",  
         "VRAY_AUTH_CLIENT_FILE_PATH" : "/opt/software/",
         "VRAY_OSL_PATH" : "{VRAY_LOCATION}/bin",
         "VRAY_PLUGINS" :"{VRAY_LOCATION}/vrayplugins",
