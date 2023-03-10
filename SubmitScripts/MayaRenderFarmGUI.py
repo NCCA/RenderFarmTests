@@ -44,7 +44,7 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.gridLayout.addWidget(label, row, 3, 1, 1)
         
         self.cpus=QtWidgets.QComboBox()
-        self.cpus.addItems(["1","2","3","4","5","6"])
+        self.cpus.addItems(["1","2","3","4","5","6","7","8"])
         self.cpus.setCurrentIndex(1)
         self.cpus.setToolTip("number of nodes to use, please be respectful of others and only use high numbers if farm is empty")
         self.gridLayout.addWidget(self.cpus, row, 4, 1, 1)
@@ -228,27 +228,29 @@ render_command=f"Render -s QB_FRAME_NUMBER -e QB_FRAME_NUMBER -r {self.active_re
 package['cmdline']=f"{{render_command}}"
         
 job['package'] = package
-job['cpus'] = 2
+job['cpus'] = {self.cpus.currentText()}
 
 env={{"HOME" :f"/render/{self.user}",  
         "RMANTREE":f"{RENDERMAN_LOCATION}",
         "PATH":f"{RENDERMAN_LOCATION}/bin:/usr/bin:/usr/sbin:{MAYA_ROOT}/bin/",
         "MAYA_RENDER_DESC_PATH" : f"{RFM_LOCATION}/etc/:{ARNOLD_LOCATION}/:{VRAY_LOCATION}/rendererDesc/",
         "PIXAR_LICENSE_FILE":"9010@talavera.bournemouth.ac.uk",        
-        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:/render/jmacey/libs:{MAYA_ROOT}/lib/:/opt/software/vray_builds/vray/lib:",
+        "LD_LIBRARY_PATH" : "/usr/lib/:/usr/lib64:{MAYA_ROOT}/lib/:/opt/software/vray_builds/vray/lib:",
         "HOME" : "/render/{self.user}",
         "MAYA_PLUG_IN_PATH" : f"{RFM_LOCATION}/plug-ins:{ARNOLD_LOCATION}/plug-ins/:{VRAY_LOCATION}/plug-ins",
         "MAYA_SCRIPT_PATH" : f"{RFM_LOCATION}/scripts:{VRAY_LOCATION}/scripts",
         "PYTHONPATH" : f"{ARNOLD_LOCATION}/scripts:{VRAY_LOCATION}/scripts",
-        "ADSKFLEX_LICENSE_FILE" : "@wrangle.bournemouth.ac.uk",
-        "RLM_LICENSE" : "5063@burton.bournemouth.ac.uk", 
+        "ARNOLD_LICENSE_ORDER" : "network",
+        "ADSKFLEX_LICENSE_FILE" : "@hamworthy.bournemouth.ac.uk",
+        #"RLM_LICENSE" : "5063@burton.bournemouth.ac.uk", 
         "VRAY_AUTH_CLIENT_FILE_PATH" : "/opt/software/",
         "VRAY_OSL_PATH" : "{VRAY_LOCATION}/bin",
         "VRAY_PLUGINS" :"{VRAY_LOCATION}/vrayplugins",
         "VRAY_OSL_PATH_MAYA2023":"/opt/software/vray_builds/vray/opensl",
         "VRAY_FOR_MAYA2023_MAIN" : "{VRAY_LOCATION}",
         "VRAY_PATH" : "{VRAY_LOCATION}/bin",
-        "VRAY_FOR_MAYA2023_PLUGINS" : "{VRAY_LOCATION}/vrayplugins"       
+        "VRAY_FOR_MAYA2023_PLUGINS" : "{VRAY_LOCATION}/vrayplugins",
+        "MAYA_DISABLE_CIP" : "1",    
          
         }}
 job['env']=env

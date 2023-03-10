@@ -40,7 +40,15 @@ class RenderFarmSubmitDialog(QtWidgets.QDialog):
         self.gridLayout.addWidget(self.select_output,1,0,1,1)
         self.output_driver = QtWidgets.QLineEdit(self)
         self.output_driver.setReadOnly(True)
-        self.gridLayout.addWidget(self.output_driver, 1, 1, 1, 5)
+        self.gridLayout.addWidget(self.output_driver, 1, 1, 1, 3)
+        label=QtWidgets.QLabel("Numeber of CPUs")
+        self.gridLayout.addWidget(label, 1, 4, 1, 1)
+        
+        self.cpus=QtWidgets.QComboBox()
+        self.cpus.addItems(["1","2","3","4","5","6","7","8"])
+        self.cpus.setCurrentIndex(1)
+        self.cpus.setToolTip("number of nodes to use, please be respectful of others and only use high numbers if farm is empty")
+        self.gridLayout.addWidget(self.cpus, 1, 5, 1, 1)
 
         # row 2
         label=QtWidgets.QLabel("Start Frame")
@@ -123,7 +131,7 @@ render_command=f"hython $HB/hrender.py -e -F QB_FRAME_NUMBER -R -d {self.output_
 package['cmdline']=f"{{pre_render}} {{render_command}}"
         
 job['package'] = package
-job['cpus'] = 8
+job['cpus'] = {self.cpus.currentText()}
    
 env={{"HOME" :f"/render/{self.user}",  
             "SESI_LMHOST" : "hamworthy.bournemouth.ac.uk",
@@ -178,7 +186,7 @@ print(id_list)
 
 
     def select_output_driver(self) :
-        output=hou.ui.selectNode(node_type_filter=hou.nodeTypeFilter.Rop,initial_node="/stage")
+        output=hou.ui.selectNode(node_type_filter=hou.nodeTypeFilter.Rop)
         # work around for weird bug where window hides behind main one
         self.raise_()            
 
